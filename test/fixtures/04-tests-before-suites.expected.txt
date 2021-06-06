@@ -1,0 +1,9 @@
+  ✓ a
+  ✓ b
+  suite
+    ✓ c
+    ✓ d
+    sub-suite
+      ✓ e
+
+  5 passing

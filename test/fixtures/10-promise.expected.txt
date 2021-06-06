@@ -1,0 +1,9 @@
+  1) a
+  ✓ b
+
+  1 passing
+  1 failing
+
+  1) a:
+
+      AssertionError [ERR_ASSERTION]: 1 == 0
