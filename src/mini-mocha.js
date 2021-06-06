@@ -33,18 +33,14 @@ const executeTest = async (func) => {
   //})
 }
 
-const printWithTime = async (toExec) => {
-  var start = now()
-  await executeTest(toExec.fn)
-  var end = now()
-  const millis = (end-start).toFixed(3) * 1000;
-  console.log("%s✓ %s (%sms)", Array(level + 1).join("  "), toExec.description, millis);
-  totalTimeOfTest += millis
-}
 
-const printWithoutTime = async (toExec) => {
-  await executeTest(toExec.fn)
-  console.log("%s✓ %s", Array(level + 1).join("  "), toExec.description);
+const printResult = (printTime, millis, description) => {
+  if (printTime) {
+    console.log("%s✓ %s (%sms)", Array(level + 1).join("  "), description, millis);
+    totalTimeOfTest += millis
+  } else {
+    console.log("%s✓ %s", Array(level + 1).join("  "), description);
+  }
 }
 
 const start = async () => {
@@ -62,10 +58,10 @@ const start = async () => {
   }
 }
 
-const doesHaveAPathToItOnly = (node) => {
+const haveAPathToItOnly = (node) => {
   if (node.itsOnly.length > 0) return true
   for (let i = 0; i < node.children.length; i++) {
-    if (doesHaveAPathToItOnly(node.children[i]) == true)
+    if (haveAPathToItOnly(node.children[i]) == true)
       return true
   }
   return false
@@ -90,17 +86,17 @@ const printErrors = (errorArr) => {
 }
 
 const executeIt =  async (its, itsOnly, before, isItOnly) => {
-  let arrToExecute = (isItOnly == true) ? itsOnly : its
+  let arrToExecute =  isItOnly? itsOnly : its
 
   for (let i = 0; i < arrToExecute.length; i++) {
     let toExec = arrToExecute[i]
     await executeBefores(before)
     try{
-      if (printTime) {
-        await printWithTime(toExec)
-      } else {
-        await printWithoutTime(toExec)
-      }
+      var start = now()
+      await toExec.fn()
+      var end = now()
+      const millis = (end-start).toFixed(3) * 1000;
+      printResult(printTime, millis, toExec.description)
       passed++;
     } catch (err) {
       failed++;
@@ -120,7 +116,7 @@ const executeTree = async (node) => {
   if (node !== null) {
     let { name, before, its, itsOnly, children, isItOnly } = node
     if (name != null) {
-      if (!isItOnly || (isItOnly && doesHaveAPathToItOnly(node)))
+      if (!isItOnly || (isItOnly && haveAPathToItOnly(node)))
         executeDescribe(name)
     }
     await executeIt(its, itsOnly, before, isItOnly)
