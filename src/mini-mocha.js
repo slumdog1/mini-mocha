@@ -1,5 +1,5 @@
 var now = require("performance-now")
-let itArr = [], beforeEachArr = [], describeArr = [], itOnlyArr = [], saveFailedStr = [];
+let its = [], beforeEachs = [], describes = [], itOnlys = [], saveFailedStr = [];
 let level = 1, failed = 0, passed = 0, isItOnly = false, id = 0, totalTimeOfTest = 0, printTime = false
 
 
@@ -23,6 +23,11 @@ const myPromise = (timeout, callback) => {
           }
       );
   });
+}
+
+
+const buildNode = (description, before, its, itOnlys, describes, isItOnly) => {
+  return {name: description, before, its: its, itsOnly: itOnlys, children: describes, isItOnly}
 }
 
 const executeTest = async (func) => {
@@ -128,37 +133,37 @@ const executeTree = async (node) => {
 
 const buildTree = (node) => {
   //delete all elements in the queues:
-  itArr = []
-  beforeEachArr = []
-  describeArr = []
-  itOnlyArr = []
+  its = []
+  beforeEachs = []
+  describes = []
+  itOnlys = []
   for (let i = 0; i < node.children.length; i++) {
     let currDescribe = node.children[i];
     let description = currDescribe.description;
     let beforeEach =  node.before;
     let fn = currDescribe.fn
     fn()
-    node.children[i] = {name: description, before: beforeEach.concat(beforeEachArr), its: itArr, itsOnly: itOnlyArr, children: describeArr, isItOnly: isItOnly || node.isItOnly}
+    node.children[i] = buildNode(description, beforeEach.concat(beforeEachs), its, itOnlys, describes, isItOnly || node.isItOnly)
     buildTree(node.children[i])
   }
 }
 
 global.it = function(description, fn) {
-  itArr.push({description, fn, id})
+  its.push({description, fn, id})
   id++;
 };
 
 global.describe = function(description, fn) {
-  describeArr.push({description, fn})
+  describes.push({description, fn})
 };
 
 global.it.only = function(description, fn) {
-  itOnlyArr.push({description, fn})
+  itOnlys.push({description, fn})
   isItOnly = true
 }
 
 global.beforeEach = function(fn) {
-  beforeEachArr.push(fn)
+  beforeEachs.push(fn)
 };
 
 
@@ -168,7 +173,7 @@ if (process.argv[3] != undefined) {
   printTime = true
 }
 
-let root = {name: null, before: beforeEachArr, its: itArr, itsOnly: itOnlyArr, children: describeArr, isItOnly: isItOnly}
+let root = buildNode(null, beforeEachs, its, itOnlys, describes, isItOnly)
 isItOnly = false
 buildTree(root)
 start()
